@@ -8,5 +8,8 @@
   "engines": {
     "node": "*"
   },
-  "main": "index.js"
+  "main": "index.js",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.com/"
+  }
 }
