@@ -8,7 +8,6 @@ function Locker(client, key, timeout) {
   timeout = timeout || 5000
 
   var self = this
-    , destroyed = false
     , lastVal
 
   function getValue(t) {
@@ -24,15 +23,11 @@ function Locker(client, key, timeout) {
   }
 
   function onerror(err) {
-    if (destroyed) return
-
     self.emit('error', err)
     self.destroy()
   }
 
   function acquire() {
-    if (destroyed) return
-
     client.setnx(key, getValue(), function(err, result) {
       if (err) return onerror(err)
 
@@ -72,26 +67,23 @@ function Locker(client, key, timeout) {
   }
 
   this.keep = function() {
-    if (destroyed) return
-
     var myVal = lastVal
 
     client.getset(key, getValue(timeout), function(err, result) {
       if (err) return onerror(err)
-      
+
       if (myVal == result) got()
     })
   }
 
   this.done = function() {
-    if (destroyed) return
-    
     client.del(key)
+    self.emit('done')
   }
 
   this.destroy = function() {
-    self.done()
-    destroyed = true
+    client.del(key)
+    self.removeAllListeners()
   }
 
   acquire()
